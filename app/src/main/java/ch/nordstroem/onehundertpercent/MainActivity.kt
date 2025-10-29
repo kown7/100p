@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
                 cLocation = location;
+                Toast.makeText(this@MainActivity, "A pikachu appeared nearby !" + location.latitude, Toast.LENGTH_SHORT).show()
             }
         }
         // Request location updates (ensure you have the necessary permissions)
