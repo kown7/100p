@@ -11,7 +11,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresPermission
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -33,12 +35,12 @@ class MainActivity : ComponentActivity() {
         }
         var cLocation = defaultLocation;
 
-        var progress by remember { mutableStateOf(0.0f) }
+        var progress by remember { mutableStateOf(0) }
 
         // Simulate progress update
         LaunchedEffect(Unit) {
             while (progress < 1.0f) {
-                progress += 0.1f
+                progress += 10
                 delay(1000L) // Simulate work
             }
         }
@@ -71,15 +73,23 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, progress: Float, onProgressComplete: () -> Unit, modifier: Modifier = Modifier) {
-    if (progress >= 1.0f) {
+fun Greeting(name: String, progress: Int, onProgressComplete: () -> Unit, modifier: Modifier = Modifier) {
+    if (progress >= 100) {
         onProgressComplete()
     }
-    CircularProgressIndicator(progress = progress, modifier = modifier)
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        CircularProgressIndicator(
+            progress = progress / 100f,
+            modifier = Modifier.size(100.dp)
+        )
+        Text(
+            text = "Hello $name!",
+            modifier = modifier
+        )
+    }
 }
 
 @Preview(showBackground = true)
