@@ -1,5 +1,6 @@
 package ch.nordstroem.onehundertpercent
 
+import android.Manifest
 import android.os.Bundle
 import android.content.Context
 import android.location.Location
@@ -8,6 +9,7 @@ import android.location.LocationManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -18,17 +20,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import ch.nordstroem.onehundertpercent.ui.theme.OneHundertPercentTheme
 
 class MainActivity : ComponentActivity() {
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val locationListener = object : LocationListener {
-            override fun onLocationChanged(location: Location) {
-                // Handle location update
-            }
+        val defaultLocation = Location(LocationManager.GPS_PROVIDER).apply {
+                  latitude = 47.3769 // Zurich latitude
+                 longitude = 8.5417 // Zurich longitude
         }
-        // Request location updates (ensure you have the necessary permissions)
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, locationListener)
+        var cLocation = defaultLocation;
+
+        setContent {
             OneHundertPercentTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
@@ -38,11 +41,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val locationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                cLocation = location;
+            }
+        }
+        // Request location updates (ensure you have the necessary permissions)
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0f, locationListener)
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting(name: String,  modifier: Modifier = Modifier) {
     Text(
         text = "Hello $name!",
         modifier = modifier
