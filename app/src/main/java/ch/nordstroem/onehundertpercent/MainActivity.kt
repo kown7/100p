@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import ch.nordstroem.onehundertpercent.ui.theme.OneHundertPercentTheme
@@ -33,12 +33,26 @@ class MainActivity : ComponentActivity() {
         }
         var cLocation = defaultLocation;
 
+        var progress by remember { mutableStateOf(0.0f) }
+
+        // Simulate progress update
+        LaunchedEffect(Unit) {
+            while (progress < 1.0f) {
+                progress += 0.1f
+                delay(1000L) // Simulate work
+            }
+        }
+
         setContent {
             OneHundertPercentTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                        progress = progress,
+                        onProgressComplete = {
+                            Toast.makeText(this@MainActivity, "Progress Complete!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
@@ -57,8 +71,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String,  modifier: Modifier = Modifier) {
-    CircularProgressIndicator(modifier = modifier)
+fun Greeting(name: String, progress: Float, onProgressComplete: () -> Unit, modifier: Modifier = Modifier) {
+    if (progress >= 1.0f) {
+        onProgressComplete()
+    }
+    CircularProgressIndicator(progress = progress, modifier = modifier)
     Text(
         text = "Hello $name!",
         modifier = modifier
