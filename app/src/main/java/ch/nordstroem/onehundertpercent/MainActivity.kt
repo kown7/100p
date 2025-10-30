@@ -5,16 +5,21 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.text.format.DateUtils
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresPermission
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
@@ -30,6 +35,8 @@ val defaultLocation = Location(LocationManager.GPS_PROVIDER).apply {
     longitude = 8.5417 // Zurich longitude
 }
 
+
+
 class MainActivity : ComponentActivity() {
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
@@ -37,16 +44,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var cLocation = defaultLocation;
-
-        var progress = 12
-
         setContent {
             OneHundertPercentTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
-                        location = cLocation,
-                        progress = progress,
+                        location = defaultLocation,
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
@@ -56,7 +58,9 @@ class MainActivity : ComponentActivity() {
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
-                cLocation = location;
+                val twc = TwilightCalculator();
+                twc.calculateTwilight(Calendar.getInstance().timeInMillis,
+                    location.latitude, location.longitude);
                 Toast.makeText(
                     this@MainActivity,
                     "A pikachu appeared nearby !" + location.latitude,
@@ -67,8 +71,7 @@ class MainActivity : ComponentActivity() {
                     OneHundertPercentTheme {
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             Greeting(
-                                location = cLocation,
-                                progress = progress,
+                                location = location,
                                 modifier = Modifier.padding(innerPadding),
                             )
                         }
@@ -87,7 +90,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(location: Location, progress: Int, modifier: Modifier = Modifier) {
+fun Greeting(location: Location, modifier: Modifier = Modifier) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -99,10 +102,23 @@ fun Greeting(location: Location, progress: Int, modifier: Modifier = Modifier) {
         startOfDay.seconds = 0;
 
         val delta = currentTime - startOfDay.toInstant().toEpochMilli();
-        val elapsedDay: Double = delta.toDouble() / (24.0 * 60 * 60 * 1000);
+
+        val twc = TwilightCalculator();
+        twc.calculateTwilight(Calendar.getInstance().timeInMillis,
+            location.latitude, location.longitude);
+
+        var elapsedDay: Double = -1.0
+        var centerText: String = "Es ist Zeit"
+
+        if (twc.mState == TwilightCalculator.NIGHT) {
+            elapsedDay = 1.0;
+        } else {
+            elapsedDay = (currentTime - twc.mSunrise).toDouble() / (twc.mSunset - twc.mSunrise).toDouble();
+            Log.d("ADebugTag", "Value: " + elapsedDay.toString());
+            centerText = String.format("%.1f", elapsedDay) + "%";
+        }
 
         CircularProgressIndicator(
-//      progress = { progress / 100f },
             progress = { elapsedDay.toFloat() },
             modifier = Modifier.size(240.dp),
             strokeWidth = 30.dp,
@@ -111,10 +127,8 @@ fun Greeting(location: Location, progress: Int, modifier: Modifier = Modifier) {
             strokeCap = StrokeCap.Butt,
         )
 
-        val percents: Float = (elapsedDay * 1000).roundToInt() / 10f
-
         Text(
-            text = "${percents}%",
+            text = centerText,
             modifier = modifier
         )
     }
@@ -124,8 +138,8 @@ fun Greeting(location: Location, progress: Int, modifier: Modifier = Modifier) {
     ) {
         Text(
             text = ("Location \n"
-                    + "Lat ${location.latitude} N \n"
-                    + "Long ${location.longitude} W\n"
+                    + "Lat  " + String.format("%.2f", location.latitude) + " N\n"
+                    + "Long " + String.format("%.2f", location.longitude) + " W\n"
                     )
         )
     }
@@ -136,8 +150,7 @@ fun Greeting(location: Location, progress: Int, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     OneHundertPercentTheme {
         Greeting(
-            defaultLocation,
-            progress = 75
+            defaultLocation
         )
     }
 }
