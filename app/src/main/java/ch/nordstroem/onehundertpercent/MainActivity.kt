@@ -116,8 +116,8 @@ class MainActivity : ComponentActivity() {
         // Request location updates (ensure you have the necessary permissions)
         locationManager.requestLocationUpdates(
             LocationManager.GPS_PROVIDER,
-            0L,
-            0f,
+            5000L,
+            1000f,
             locationListener
         )
     }
