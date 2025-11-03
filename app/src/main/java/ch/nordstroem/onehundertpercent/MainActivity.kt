@@ -6,7 +6,10 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -42,6 +45,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Check for location permissions
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestLocationPermission()
+        } else {
+            startLocationUpdates()
+        }
+
         setContent {
             OneHundertPercentTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -53,6 +64,24 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    private fun requestLocationPermission() {
+        val requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+                startLocationUpdates()
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+        requestPermissionLauncher.launch(
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        )
+    }
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun startLocationUpdates() {
         val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         val locationListener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
