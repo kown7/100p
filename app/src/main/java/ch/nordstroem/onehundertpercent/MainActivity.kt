@@ -5,7 +5,6 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.text.format.DateUtils
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -28,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import ch.nordstroem.onehundertpercent.ui.theme.OneHundertPercentTheme
 import java.util.Calendar
 import java.util.Date
-import kotlin.math.roundToInt
 
 val defaultLocation = Location(LocationManager.GPS_PROVIDER).apply {
     latitude = 47.3769 // Zurich latitude
@@ -115,7 +113,7 @@ fun Greeting(location: Location, modifier: Modifier = Modifier) {
         } else {
             elapsedDay = (currentTime - twc.mSunrise).toDouble() / (twc.mSunset - twc.mSunrise).toDouble();
             Log.d("ADebugTag", "Value: " + elapsedDay.toString());
-            centerText = String.format("%.1f", elapsedDay) + "%";
+            centerText = String.format("%.1f", elapsedDay * 100.0) + "%";
         }
 
         CircularProgressIndicator(
@@ -139,7 +137,7 @@ fun Greeting(location: Location, modifier: Modifier = Modifier) {
         Text(
             text = ("Location \n"
                     + "Lat  " + String.format("%.2f", location.latitude) + " N\n"
-                    + "Long " + String.format("%.2f", location.longitude) + " W\n"
+                    + "Long " + String.format("%.2f", location.longitude) + " E\n"
                     )
         )
     }
