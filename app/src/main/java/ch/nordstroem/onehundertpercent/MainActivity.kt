@@ -45,8 +45,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // Check for location permissions
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             requestLocationPermission()
         } else {
             startLocationUpdates()
@@ -62,6 +69,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
 
     private fun requestLocationPermission() {
         val requestPermissionLauncher = registerForActivityResult(
