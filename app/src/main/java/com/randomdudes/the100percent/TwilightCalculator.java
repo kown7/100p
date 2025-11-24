@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.nordstroem.onehundertpercent;
+package com.randomdudes.the100percent;
 
 import android.text.format.DateUtils;
 

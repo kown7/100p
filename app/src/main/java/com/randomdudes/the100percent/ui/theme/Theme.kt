@@ -1,4 +1,4 @@
-package ch.nordstroem.onehundertpercent.ui.theme
+package com.randomdudes.the100percent.ui.theme
 
 import android.app.Activity
 import android.os.Build

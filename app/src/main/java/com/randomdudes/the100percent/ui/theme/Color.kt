@@ -1,4 +1,4 @@
-package ch.nordstroem.onehundertpercent.ui.theme
+package com.randomdudes.the100percent.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

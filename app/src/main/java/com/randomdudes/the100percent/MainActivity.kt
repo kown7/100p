@@ -1,4 +1,4 @@
-package ch.nordstroem.onehundertpercent
+package com.randomdudes.the100percent
 
 import android.Manifest
 import android.location.Location
@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ch.nordstroem.onehundertpercent.ui.theme.OneHundertPercentTheme
+import com.randomdudes.the100percent.ui.theme.OneHundertPercentTheme
 import java.util.Calendar
 import java.util.Date
 
