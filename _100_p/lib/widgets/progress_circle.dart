@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../l10n/app_strings.dart';
 
 class DaylightProgressCircle extends StatelessWidget {
   final double progress;
@@ -44,7 +45,7 @@ class DaylightProgressCircle extends StatelessWidget {
                   ),
                   if (!isNight)
                     Text(
-                      'OF DAY ELAPSED',
+                      AppStrings.of(context).elapsedLabel,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.38),
                         fontSize: 9,

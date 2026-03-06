@@ -4,22 +4,25 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/location_data.dart';
+import '../models/location_error.dart';
 import '../twilight_calculator.dart';
 
 class LocationProvider with ChangeNotifier {
   LocationData _locationData = LocationData.defaultLocation;
   bool _isLoading = false;
-  String? _error;
-  String? _toastMessage;
+  LocationErrorType? _errorType;
+  // Latitude of the latest position update — null means no pending toast.
+  double? _pendingToastLat;
   StreamSubscription<Position>? _positionStream;
 
   LocationData get locationData => _locationData;
   bool get isLoading => _isLoading;
-  String? get error => _error;
-  String? get toastMessage => _toastMessage;
+  LocationErrorType? get errorType => _errorType;
+  double? get pendingToastLat => _pendingToastLat;
 
   void clearToast() {
-    _toastMessage = null;
+    _pendingToastLat = null;
+    // No notifyListeners — clearing the toast must not trigger a rebuild.
   }
 
   LocationProvider() {
@@ -37,7 +40,7 @@ class LocationProvider with ChangeNotifier {
       // Try to get actual location
       await _requestLocationPermission();
     } catch (e) {
-      _error = e.toString();
+      _errorType = LocationErrorType.unknown;
       developer.log('Location initialization error: $e');
     } finally {
       _isLoading = false;
@@ -53,7 +56,7 @@ class LocationProvider with ChangeNotifier {
     developer.log("Location services enabled: $serviceEnabled");
     
     if (!serviceEnabled) {
-      _error = "Location services are disabled. Please enable location services in Settings.";
+      _errorType = LocationErrorType.servicesDisabled;
       notifyListeners();
       return;
     }
@@ -68,14 +71,14 @@ class LocationProvider with ChangeNotifier {
       developer.log("Permission after request: $permission");
       
       if (permission == LocationPermission.denied) {
-        _error = "Location permission denied";
+        _errorType = LocationErrorType.permissionDenied;
         notifyListeners();
         return;
       }
     }
     
     if (permission == LocationPermission.deniedForever) {
-      _error = "Location permissions are permanently denied. Please enable them in Settings.";
+      _errorType = LocationErrorType.permanentlyDenied;
       notifyListeners();
       return;
     }
@@ -85,7 +88,7 @@ class LocationProvider with ChangeNotifier {
       developer.log("Permission granted, starting location updates...");
       await _startLocationUpdates();
     } else {
-      _error = "Location permission not granted: $permission";
+      _errorType = LocationErrorType.unknown;
       notifyListeners();
     }
   }
@@ -127,7 +130,7 @@ class LocationProvider with ChangeNotifier {
       );
 
     } catch (e) {
-      _error = e.toString();
+      _errorType = LocationErrorType.unknown;
       developer.log('Location update error: $e');
       notifyListeners();
     }
@@ -135,10 +138,8 @@ class LocationProvider with ChangeNotifier {
 
   void _updateLocationData(Position position) {
     _calculateTwilightForLocation(position.latitude, position.longitude, position);
-    
-    // Replicate the Android toast: "A pikachu appeared nearby!"
-    _toastMessage = "A pikachu appeared nearby! ${position.latitude}";
-    developer.log("A pikachu appeared nearby! ${position.latitude}");
+    _pendingToastLat = position.latitude; // UI will read + translate this
+    developer.log('Location updated: ${position.latitude}, ${position.longitude}');
     notifyListeners();
   }
 
@@ -178,7 +179,7 @@ class LocationProvider with ChangeNotifier {
       progress: progress,
     );
     
-    _error = null;
+    _errorType = null;
     notifyListeners();
   }
 
@@ -193,10 +194,10 @@ class LocationProvider with ChangeNotifier {
     await _initializeLocation();
   }
 
-  // Manual permission request method for debugging
+  // Manual permission request method
   Future<void> requestPermissionManually() async {
     _isLoading = true;
-    _error = null;
+    _errorType = null;
     notifyListeners();
     
     await _requestLocationPermission();

@@ -3,8 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'l10n/app_strings.dart';
 import 'models/location_data.dart';
 import 'providers/location_provider.dart';
 import 'widgets/progress_circle.dart';
@@ -29,6 +31,14 @@ class OneHundredPercentApp extends StatelessWidget {
       child: MaterialApp(
         title: 'One Hundert Percent',
         debugShowCheckedModeBanner: false,
+        locale: const Locale('de'), // default; overridden by device locale
+        supportedLocales: const [Locale('en'), Locale('de')],
+        localizationsDelegates: const [
+          AppStrings.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: ThemeData.dark(useMaterial3: true).copyWith(
           scaffoldBackgroundColor: const Color(0xFF020818),
         ),
@@ -119,10 +129,11 @@ class _HomePageState extends State<HomePage> {
 
   void _onProviderChanged() {
     final lp = Provider.of<LocationProvider>(context, listen: false);
-    if (lp.toastMessage != null) {
+    if (lp.pendingToastLat != null) {
+      final s = AppStrings.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(lp.toastMessage!),
+          content: Text(s.pikachuToast(lp.pendingToastLat!)),
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.black87,
@@ -171,7 +182,9 @@ class _HomePageState extends State<HomePage> {
 
                       DaylightProgressCircle(
                         progress: data.progress,
-                        centerText: data.displayText,
+                        centerText: data.isNight
+                            ? AppStrings.of(context).nightText
+                            : data.displayText,
                         isNight: data.isNight,
                       ),
 
@@ -181,14 +194,14 @@ class _HomePageState extends State<HomePage> {
 
                       const Spacer(flex: 2),
 
-                      if (lp.error != null)
+                      if (lp.errorType != null)
                         Padding(
                           padding:
                               const EdgeInsets.fromLTRB(24, 0, 24, 16),
                           child: _ErrorCard(lp: lp),
                         ),
 
-                      if (lp.isLoading && lp.error == null)
+                      if (lp.isLoading && lp.errorType == null)
                         const Padding(
                           padding: EdgeInsets.only(bottom: 24),
                           child: CircularProgressIndicator(
@@ -258,6 +271,7 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: ClipRRect(
@@ -278,19 +292,19 @@ class _InfoCard extends StatelessWidget {
               children: [
                 _InfoTile(
                   icon: Icons.wb_sunny_outlined,
-                  label: 'SUNRISE',
+                  label: s.sunrise,
                   value: _formatTime(data.sunrise),
                 ),
                 _VertDivider(),
                 _InfoTile(
                   icon: Icons.nights_stay_outlined,
-                  label: 'SUNSET',
+                  label: s.sunset,
                   value: _formatTime(data.sunset),
                 ),
                 _VertDivider(),
                 _InfoTile(
                   icon: Icons.location_on_outlined,
-                  label: 'LOCATION',
+                  label: s.location,
                   value:
                       '${data.latitude.toStringAsFixed(2)}° N\n${data.longitude.toStringAsFixed(2)}° E',
                 ),
@@ -353,6 +367,7 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -374,9 +389,12 @@ class _ErrorCard extends StatelessWidget {
                       color: Colors.white54, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(lp.error!,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13)),
+                    child: Text(
+                      lp.errorType != null
+                          ? s.errorMessage(lp.errorType!)
+                          : '',
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 13)),
                   ),
                 ],
               ),
@@ -386,14 +404,14 @@ class _ErrorCard extends StatelessWidget {
                 children: [
                   TextButton(
                     onPressed: lp.refresh,
-                    child: const Text('Retry',
-                        style: TextStyle(color: Colors.white54)),
+                    child: Text(s.retry,
+                        style: const TextStyle(color: Colors.white54)),
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
                     onPressed: lp.requestPermissionManually,
                     icon: const Icon(Icons.my_location, size: 14),
-                    label: const Text('Enable Location'),
+                    label: Text(s.enableLocation),
                     style: FilledButton.styleFrom(
                         backgroundColor:
                             Colors.white.withValues(alpha: 0.15)),
