@@ -56,38 +56,55 @@ LinearGradient _skyGradient(double progress, bool isNight) {
   late List<Color> c;
 
   if (isNight) {
+    // Deep midnight navy
     c = [const Color(0xFF020818), const Color(0xFF050E2A), const Color(0xFF0B1A3E)];
-  } else if (progress < 0.15) {
-    // pre-dawn → dawn
-    final t = progress / 0.15;
+  } else if (progress < 0.08) {
+    // Pre-dawn: navy to first pink glow on horizon
+    final t = progress / 0.08;
     c = [
-      Color.lerp(const Color(0xFF020818), const Color(0xFF1A237E), t)!,
+      Color.lerp(const Color(0xFF020818), const Color(0xFF37265A), t)!,
       Color.lerp(const Color(0xFF050E2A), const Color(0xFFBF360C), t)!,
       Color.lerp(const Color(0xFF0B1A3E), const Color(0xFFFF8F00), t)!,
     ];
-  } else if (progress < 0.5) {
-    // dawn → midday
-    final t = (progress - 0.15) / 0.35;
+  } else if (progress < 0.18) {
+    // Sunrise: warm orange horizon, sky turning purple → blue starts appearing
+    final t = (progress - 0.08) / 0.10;
     c = [
-      Color.lerp(const Color(0xFF1A237E), const Color(0xFF0D47A1), t)!,
-      Color.lerp(const Color(0xFFBF360C), const Color(0xFF1565C0), t)!,
-      Color.lerp(const Color(0xFFFF8F00), const Color(0xFF90CAF9), t)!,
+      Color.lerp(const Color(0xFF37265A), const Color(0xFF1565C0), t)!,
+      Color.lerp(const Color(0xFFBF360C), const Color(0xFF42A5F5), t)!,
+      Color.lerp(const Color(0xFFFF8F00), const Color(0xFFFFE0B2), t)!,
+    ];
+  } else if (progress < 0.30) {
+    // Mid-morning (≈9–11am): clear bright blue sky dominates fully
+    final t = (progress - 0.18) / 0.12;
+    c = [
+      Color.lerp(const Color(0xFF1565C0), const Color(0xFF1976D2), t)!,
+      Color.lerp(const Color(0xFF42A5F5), const Color(0xFF64B5F6), t)!,
+      Color.lerp(const Color(0xFFFFE0B2), const Color(0xFFE3F2FD), t)!,
+    ];
+  } else if (progress < 0.70) {
+    // Midday: vivid azure top, hazy white-blue horizon
+    final t = (progress - 0.30) / 0.40;
+    c = [
+      Color.lerp(const Color(0xFF1976D2), const Color(0xFF1565C0), t)!,
+      Color.lerp(const Color(0xFF64B5F6), const Color(0xFF90CAF9), t)!,
+      Color.lerp(const Color(0xFFE3F2FD), const Color(0xFFFFF9C4), t)!,
     ];
   } else if (progress < 0.85) {
-    // midday → late afternoon
-    final t = (progress - 0.5) / 0.35;
+    // Late afternoon → golden hour
+    final t = (progress - 0.70) / 0.15;
     c = [
-      Color.lerp(const Color(0xFF0D47A1), const Color(0xFF4A148C), t)!,
-      Color.lerp(const Color(0xFF1565C0), const Color(0xFFE65100), t)!,
-      Color.lerp(const Color(0xFF90CAF9), const Color(0xFFFF8F00), t)!,
+      Color.lerp(const Color(0xFF1565C0), const Color(0xFF6A1B9A), t)!,
+      Color.lerp(const Color(0xFF90CAF9), const Color(0xFFEF6C00), t)!,
+      Color.lerp(const Color(0xFFFFF9C4), const Color(0xFFFFCC02), t)!,
     ];
   } else {
-    // sunset → night
+    // Sunset → night
     final t = (progress - 0.85) / 0.15;
     c = [
-      Color.lerp(const Color(0xFF4A148C), const Color(0xFF020818), t)!,
-      Color.lerp(const Color(0xFFE65100), const Color(0xFF050E2A), t)!,
-      Color.lerp(const Color(0xFFFF8F00), const Color(0xFF0B1A3E), t)!,
+      Color.lerp(const Color(0xFF6A1B9A), const Color(0xFF020818), t)!,
+      Color.lerp(const Color(0xFFEF6C00), const Color(0xFF050E2A), t)!,
+      Color.lerp(const Color(0xFFFFCC02), const Color(0xFF0B1A3E), t)!,
     ];
   }
 
@@ -174,6 +191,16 @@ class _HomePageState extends State<HomePage> {
                   child: const _StarField(),
                 ),
 
+                // Sun glow — only visible during the day
+                if (!data.isNight)
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      opacity: data.isNight ? 0.0 : 1.0,
+                      duration: const Duration(seconds: 2),
+                      child: _SunGlow(progress: data.progress),
+                    ),
+                  ),
+
                 // Main content
                 SafeArea(
                   child: Column(
@@ -216,6 +243,57 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sun glow (day background radial burst)
+// ---------------------------------------------------------------------------
+class _SunGlow extends StatelessWidget {
+  final double progress;
+  const _SunGlow({required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    final x = progress.clamp(0.0, 1.0);
+    final alignment = Alignment(x * 2 - 1, -0.65);
+
+    // How warm (orange) vs cool (white) the sun is:
+    // 0–10%: full orange dawn, 10–25%: rapidly cools to pale gold, 25–75%: white-gold midday
+    final warmth = progress < 0.10
+        ? 1.0
+        : progress < 0.25
+            ? 1.0 - ((progress - 0.10) / 0.15)
+            : 0.0;
+
+    // Core colour: lerp from deep amber (dawn) to pale white-gold (day)
+    final coreR = (255).round();
+    final coreG = (165 + (255 - 165) * (1 - warmth)).round().clamp(0, 255);
+    final coreB = (0 + 220 * (1 - warmth)).round().clamp(0, 255);
+
+    // Intensity: strong at dawn/dusk edges, slightly dimmer at peak midday
+    final intensity = progress < 0.15
+        ? (progress / 0.15) * 0.55          // fade in at dawn
+        : progress > 0.85
+            ? ((1.0 - progress) / 0.15) * 0.55 // fade out at dusk
+            : 0.30 + (1.0 - (progress - 0.5).abs() * 1.5).clamp(0.0, 1.0) * 0.15;
+
+    return AnimatedContainer(
+      duration: const Duration(seconds: 3),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: alignment,
+          radius: 1.0,
+          colors: [
+            Color.fromRGBO(coreR, coreG, coreB, intensity.clamp(0.0, 1.0)),
+            Color.fromRGBO(coreR, coreG, coreB, (intensity * 0.35).clamp(0.0, 1.0)),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.40, 1.0],
+        ),
       ),
     );
   }
@@ -282,10 +360,10 @@ class _InfoCard extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12)),
+                  color: Colors.white.withValues(alpha: 0.14)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -329,13 +407,11 @@ class _InfoTile extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white38, size: 15),
+        Icon(icon, color: Colors.white54, size: 15),
         const SizedBox(height: 6),
         Text(label,
             style: const TextStyle(
-                color: Colors.white38,
-                fontSize: 9,
-                letterSpacing: 1.5)),
+                color: Colors.white54, fontSize: 9, letterSpacing: 1.5)),
         const SizedBox(height: 5),
         Text(value,
             textAlign: TextAlign.center,
@@ -350,11 +426,13 @@ class _InfoTile extends StatelessWidget {
 }
 
 class _VertDivider extends StatelessWidget {
+  // ignore: unused_element
+  const _VertDivider();
   @override
   Widget build(BuildContext context) => Container(
         width: 1,
         height: 52,
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.15),
       );
 }
 

@@ -6,12 +6,14 @@ class DaylightProgressCircle extends StatelessWidget {
   final double progress;
   final String centerText;
   final bool isNight;
+  final bool isDaytime;
 
   const DaylightProgressCircle({
     super.key,
     required this.progress,
     required this.centerText,
     required this.isNight,
+    this.isDaytime = false,
   });
 
   @override
@@ -41,15 +43,27 @@ class DaylightProgressCircle extends StatelessWidget {
                       fontSize: isNight ? 34.0 : 54.0,
                       fontWeight: FontWeight.w200,
                       letterSpacing: -1.5,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 12,
+                        ),
+                      ],
                     ),
                   ),
                   if (!isNight)
                     Text(
                       AppStrings.of(context).elapsedLabel,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.38),
+                        color: Colors.white.withValues(alpha: 0.55),
                         fontSize: 9,
                         letterSpacing: 3.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.20),
+                            blurRadius: 8,
+                          ),
+                        ],
                       ),
                     ),
                 ],
