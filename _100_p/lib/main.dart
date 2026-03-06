@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -350,6 +351,7 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: ClipRRect(
@@ -358,7 +360,7 @@ class _InfoCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.22),
               borderRadius: BorderRadius.circular(24),
@@ -366,25 +368,30 @@ class _InfoCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.14)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _InfoTile(
-                  icon: Icons.wb_sunny_outlined,
-                  label: s.sunrise,
-                  value: _formatTime(data.sunrise),
+                Expanded(
+                  child: _InfoTile(
+                    icon: isIOS ? CupertinoIcons.sunrise : Icons.wb_sunny_outlined,
+                    label: s.sunrise,
+                    value: _formatTime(data.sunrise),
+                  ),
                 ),
-                _VertDivider(),
-                _InfoTile(
-                  icon: Icons.nights_stay_outlined,
-                  label: s.sunset,
-                  value: _formatTime(data.sunset),
+                const _VertDivider(),
+                Expanded(
+                  child: _InfoTile(
+                    icon: isIOS ? CupertinoIcons.sunset : Icons.nights_stay_outlined,
+                    label: s.sunset,
+                    value: _formatTime(data.sunset),
+                  ),
                 ),
-                _VertDivider(),
-                _InfoTile(
-                  icon: Icons.location_on_outlined,
-                  label: s.location,
-                  value:
-                      '${data.latitude.toStringAsFixed(2)}° N\n${data.longitude.toStringAsFixed(2)}° E',
+                const _VertDivider(),
+                Expanded(
+                  child: _InfoTile(
+                    icon: isIOS ? CupertinoIcons.location : Icons.location_on_outlined,
+                    label: s.location,
+                    value:
+                        '${data.latitude.toStringAsFixed(2)}°\n${data.longitude.toStringAsFixed(2)}°',
+                  ),
                 ),
               ],
             ),
@@ -409,17 +416,27 @@ class _InfoTile extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white54, size: 15),
         const SizedBox(height: 6),
-        Text(label,
-            style: const TextStyle(
-                color: Colors.white54, fontSize: 9, letterSpacing: 1.5)),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              color: Colors.white54, fontSize: 8.5, letterSpacing: 1.2),
+        ),
         const SizedBox(height: 5),
-        Text(value,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
             textAlign: TextAlign.center,
             style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                height: 1.4)),
+                height: 1.4),
+          ),
+        ),
       ],
     );
   }
