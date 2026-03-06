@@ -32,6 +32,8 @@ class LocationData {
         progress: 1.0,
       );
 
+  bool get isNight => twilightState == 1;
+
   LocationData copyWith({
     Position? position,
     double? latitude,
