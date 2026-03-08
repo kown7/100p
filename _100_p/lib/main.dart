@@ -449,6 +449,7 @@ class _VertDivider extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: 1,
         height: 52,
+        margin: const EdgeInsets.symmetric(horizontal: 16),
         color: Colors.white.withValues(alpha: 0.15),
       );
 }

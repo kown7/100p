@@ -16,9 +16,7 @@ class AppStrings {
   bool get _de => locale.languageCode == 'de';
 
   // ── Center ring text ────────────────────────────────────────────────────
-  /// Shown when it is night (the app's identity tagline stays German in both
-  /// languages as a deliberate design choice, but can be overridden).
-  String get nightText => 'Es ist Zeit';
+  String get nightText => _de ? 'Es ist Nacht' : 'It is Night';
 
   /// Sub-label below the percentage during the day.
   String get elapsedLabel => _de ? 'DES TAGES VERGANGEN' : 'OF DAY ELAPSED';
